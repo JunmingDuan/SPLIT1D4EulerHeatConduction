@@ -1,0 +1,215 @@
+\documentclass[a4paper, 11pt]{ctexart}
+\usepackage{srcltx,graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{color}
+\usepackage{lscape}
+\usepackage{multirow}
+\usepackage{cases}
+\usepackage{enumerate}
+\usepackage{float}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{bm}
+\usepackage{psfrag}
+\usepackage{mathrsfs}
+\usepackage[hang]{subfigure}
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+
+\newtheorem{theorem}{定理}
+\newtheorem{example}{例}
+\newtheorem{lemma}{引理}
+\newtheorem{definition}{定义}
+\newtheorem{remark}{注}
+\newtheorem{comment}{注}
+\newtheorem{conjecture}{Conjecture}
+
+\setlength{\oddsidemargin}{0cm}
+\setlength{\evensidemargin}{0cm}
+\setlength{\textwidth}{150mm}
+\setlength{\textheight}{230mm}
+
+\newcommand\note[2]{{{\bf #1}\color{red} [ {\it #2} ]}}
+%\newcommand\note[2]{{ #1 }} % using this line in the formal version
+
+\newcommand\bbC{\mathbb{C}}
+\newcommand\bbR{\mathbb{R}}
+\newcommand\bbN{\mathbb{N}}
+
+\newcommand\diag{\mathrm{diag}}
+\newcommand\tr{\mathrm{tr}}
+\newcommand\dd{\mathrm{d}}
+\renewcommand\div{\mathrm{div}}
+
+\newcommand\be{\boldsymbol{e}}
+\newcommand\bx{\boldsymbol{x}}
+\newcommand\bF{\boldsymbol{F}}
+\newcommand\bJ{\boldsymbol{J}}
+\newcommand\bT{\boldsymbol{T}}
+\newcommand\bG{\boldsymbol{G}}
+\newcommand\bof{\boldsymbol{f}}
+\newcommand\bu{\boldsymbol{u}}
+\newcommand\bn{\boldsymbol{n}}
+\newcommand\bv{\boldsymbol{v}}
+\newcommand\bV{\boldsymbol{V}}
+\newcommand\bU{\boldsymbol{U}}
+\newcommand\bA{\boldsymbol{A}}
+\newcommand\bB{\boldsymbol{B}}
+\newcommand\vecf{\boldsymbol{f}}
+\newcommand\hatF{\hat{F}}
+\newcommand\flux{\hat{F}_{j+1/2}}
+\newcommand\diff{\,\mathrm{d}}
+\newcommand\Norm[1]{\lvert\lvert#1\rvert\rvert}
+
+\newcommand\pd[2]{\dfrac{\partial {#1}}{\partial {#2}}}
+\newcommand\od[2]{\dfrac{\dd {#1}}{\dd {#2}}}
+\newcommand\abs[1]{\lvert #1 \rvert}
+\newcommand\norm[1]{\lvert\lvert #1 \rvert\rvert}
+\newcommand\bt{\bar\theta}
+\newcommand\bd[1]{\bold{#1}}
+\newcommand\pro[2]{\langle{#1},{#2}\rangle}
+
+\title{流体方程组与非线性热传导的耦合}
+\author{段俊明\thanks{北京大学数学科学学院，科学与工程计算系，邮箱： {\tt duanjm@pku.edu.cn}} }
+
+\begin{document}
+\maketitle
+%\tableofcontents %If the document is very long
+
+\section{low energy density regime}
+[On Consistent Time-Integration Methods for Radiation Hydrodynamics in
+the Equilibrium Diffusion Limit: Low-Energy-Density Regime, J. W. Bates et al., 2001, JCP]
+中给出了灰体近似和扩散极限下,且辐射场和物质保持LTE,非相对论情形下的辐射流体方程组,
+\begin{align}
+  \pd{\rho}{t}+\nabla\cdot(\rho\bu)&=0,\\
+  \pd{}{t}(\rho\bu)+\nabla\cdot(\rho\bu\bu)+\nabla (p+P_\nu)&=0,\\
+  \pd{}{t}(E+E_\nu)+\nabla\cdot[(E+E_\nu+p+p_\nu)\bu]&=\nabla\cdot(\kappa\nabla T),
+\end{align}
+其中,~$p_\nu=E_\nu/3=\dfrac43\sigma T^4/c$,~$p=R\rho T=(\gamma-1)\rho e$,
+在low energy density regime中,~$p_\nu,E_\nu$相对于$p,E$可以忽略不计.
+考虑一维球对称情形,该方程组化为
+\begin{align}
+  \pd{\rho}{t}+\dfrac{1}{r^2}\pd{}{r}(r^2\rho u)&=0,\\
+  \pd{}{t}(\rho u)+\dfrac{1}{r^2}\pd{}{r}(r^2\rho u^2)+\pd{p}{r}&=0,\\
+  \pd{E}{t}+\dfrac{1}{r^2}\pd{}{r}[r^2(E+p)u]&=
+  \dfrac{1}{r^2}\pd{}{r}(r^2\kappa \pd{T}{r}).
+\end{align}
+定义比热容$C_v=\dfrac{R}{\gamma-1}$,则$E=C_v\rho T+\dfrac12\rho u^2$,
+这里假定$\kappa=\kappa_0\rho^a T^b$,在模型中$b=2.5,6.5$,因此$\kappa$可能很大,
+这一项需要隐式处理.
+
+\section{算法}
+\subsection{显式部分}
+将流体方程组写为
+\begin{equation}
+  \pd{\bU}{t}+\pd{(A\bF)}{V}+\pd{\bG}{r}=0,
+\end{equation}
+其中$\bU=(\rho,\rho u,E)$,~$\bF(\bU)=(\rho u,\rho
+u^2,u(E+p))$,~$\bG(\bU)=(0,p,0)$,~$V=\frac43\pi r^3$,~$A=4\pi r^2$.
+使用二阶RK求解,
+\begin{align}
+  \bU^1&=\bU^n+\Delta tL(\bU^n),\\
+  \bU^{n+1}&=\frac12\bU^n+\frac12\bU^1+\frac12\Delta tL(\bU^{1}),
+\end{align}
+使用LLF通量,
+\begin{align}
+  \bU^1_i&=\bU^n_i-\dfrac{\Delta t}{\Delta V_i}(A_{i+\frac12}\bF^n_{i+\frac12}
+  -A_{i-\frac12}\bF^n_{i-\frac12})-\dfrac{\Delta t}{\Delta
+  r}(\bG^n_{i+\frac12}-\bG^n_{i+\frac12}),\\
+  \bF_{i+\frac12}&=\dfrac{\bF(\bU^R_{i+\frac12})+\bF(\bU^L_{i+\frac12})}{2}
+  -\alpha_{i+\frac12}\dfrac{\bU^R_{i+\frac12}-\bU^L_{i+\frac12}}{2},
+\end{align}
+%$\bU^R_{i+\frac12}, \bU^L_{i+\frac12}$使用线性重构和minmod限制器得到.
+%与常见的格式唯一不同之处是,
+%\begin{equation}
+  %E^{1,*}=C_v\rho^1 T^k+\frac12\rho^1(u^1)^2,
+%\end{equation}
+%使用了隐式第k次迭代得到的温度$T^k$.
+
+\subsection{隐式部分}
+\begin{enumerate}
+  \item 在$t^n$时,使用Newton迭代法求解隐式离散热传导项得到的非线性方程组,
+    假设当前是第k次迭代;
+  \item 形成非线性方程组,令向量值函数$\boldsymbol{f}$的第$i$个分量为,
+    \begin{align}
+      &\boldsymbol{f}_i=\dfrac{C_v\rho_i^{n+1}T_i^k+\rho_i^{n+1}(u_i^{n+1})^2/2-E_i^*}{\Delta
+      t}-\dfrac{RHS(\rho_i^{n+1},T_i^k)+RHS(\rho_i^{n},T_i^n)}{2},\\
+      &RHS(\rho_i,T_i)=\dfrac{A_{i+\frac12}\kappa_{i+\frac12}(T_{i+1}-T_i)/\Delta r}{\Delta V_i}-
+      -\dfrac{A_{i-\frac12}\kappa_{i-\frac12}(T_{i}-T_{i-1})/\Delta r}{\Delta V_i},
+    \end{align}
+    于是Newton迭代法的第k步为,
+    \begin{equation}
+      \bJ_k\delta \bT_k = -\boldsymbol{f}(\bT_k),
+    \end{equation}
+    其中矩阵$\bJ$为$\boldsymbol{f}$的Jacobi矩阵,矩阵$\bJ$与向量$\bx$的乘法可由下式得到,
+    \begin{equation}
+      \bJ \bx=[\boldsymbol{f}(\bx+\epsilon\bx)-\boldsymbol{f}(\bx)]/\epsilon,
+    \end{equation}
+    它将在GMRES中使用;
+  \item 使用GMRES求解第k次迭代形成的线性方程组,~$\bT_{k+1}=\bT_k+\delta \bT_k,\ k=k+1$;
+  \item 当残量$\norm{\boldsymbol{f}(\bT_k)}<\varepsilon$时迭代结束,否则回到第1步.
+\end{enumerate}
+
+\subsection{整体算法}
+在一个时间步内,显式部分求解流体方程组,~$(\rho^n,\rho^n u^n,E^n)^\mathrm{T}\rightarrow
+(\rho^{n+1},\rho^{n+1} u^{n+1},E^*)^\mathrm{T}$,隐式部分求解热传导项
+,~$T^n\rightarrow T^{n+1},\ E^*\rightarrow E^{n+1}$.
+
+\subsection{时间步长选取}
+辐射流体方程组的时间步长选取比较复杂,一个主要原因是热传导系数$\kappa$是
+$\rho,T$的非线性函数,一般没有一个最优的时间步长选取方式.
+一个流行的做法是,第一步给一个满足所有稳定性条件的时间步长$\Delta t$,之后尽可能逐
+步增大$\Delta t$,
+\begin{align}
+  \left(\dfrac{\Delta E}{E}\right)^{n+1}&=\max _j\left(\dfrac{\abs{E^{n+1}_j-E^n_j}}{E^{n+1}_j+E_0}\right),\\
+    \Delta t^{n+1}&=\Delta t^n\sqrt{\dfrac{(\Delta E/E)^{n+1}}{(\Delta E/E)_{max}}},
+\end{align}
+通常${(\Delta E/E)_{max}}$是预先给定$E$的相对变化大小,一般选取为$0.05\sim 0.2$.
+
+另一种选取方式是考虑$E$的一个双曲模型,
+\begin{equation}
+  \pd{E}{t}+v_f\pd{E}{r}=0,
+\end{equation}
+其中``front velocity''$v_f$是一个未知函数.选取一个适当的front-CFL值来控制时间步
+长的变化,
+\begin{align}
+  \Delta t^{n+1}&=\text{front-CFL}\times \dfrac{\Delta r}{v_f^n}，\\
+  v^n_f&=\dfrac{\norm{\abs{\Delta E^n}/\Delta t^n}_1}{\norm{\abs{\Delta E^n}/\Delta r}_1}.
+\end{align}
+
+最终的时间步长是,比较上面得到的时间步长与显示部分求解流体方程组的时间步长,其中较小的值.
+
+\section{数值算例}
+\subsection{Barenblatt problem}
+忽略流体部分,考虑热传导项,
+\begin{equation}
+  \pd{T}{t}=\dfrac{1}{r^2}\pd{}{r}\left(r^2\chi\pd{T}{r}\right),
+\end{equation}
+在$t=0$时在$r=0$处放置一个能量为$E_0$的源,随时间发展,热量会向外扩散,形成一个热锋
+(thermal front),该问题的一个自相似解为,
+\begin{equation}
+  T=T_c\left(1-\dfrac{r^2}{r^2_f}\right)^{1/b},
+\end{equation}
+其中
+\begin{align*}
+  Q&=\dfrac{E_0}{\rho C_v},\\
+  r_f&=\xi_0(\chi_0 Q^bt)^{1/(3b+2)},\\
+  \xi_0&=\left(\dfrac{3b+2}{2^{b-1}b\pi^b}\right)^{1/(3b+2)}\left[\dfrac{\Gamma(5/2+1/b)}{\Gamma(1+1/b)\Gamma(3/2)}\right]^{b/(3b+2)},\\
+  T_c&=\dfrac{Q\xi_0^3}{r_f^3}\left[\dfrac{b\xi_0^2}{2(3b+2)}\right]^{1/b}.
+\end{align*}
+区间两端边界条件均为Neumann边界条件,~$\pd{T}{r}=0$.
+
+\begin{figure}[H]
+  \centering
+  \subfigure[$b=2.5$]{
+    \includegraphics[width=0.45\textwidth]{B1_the0.eps}
+  }
+  \subfigure[$b=6.5$]{
+    \includegraphics[width=0.45\textwidth]{B2_the1.eps}
+  }
+\end{figure}
+从上图可以看到,~$b=2.5$时数值解与精确解完全吻合,但是$b=6.5$时数值解偏离了精确解,
+$b=6.5$导致$\kappa$非线性性更强,迭代法收敛效果不好,之后需要为Newton-Krylov迭代
+选取更合适的参数,使得$b=6.5$时的数值解收敛.
+
+\end{document}
+

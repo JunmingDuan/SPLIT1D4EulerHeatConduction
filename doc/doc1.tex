@@ -1,0 +1,247 @@
+\documentclass[a4paper, 11pt]{ctexart}
+\usepackage{srcltx,graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{color}
+\usepackage{lscape}
+\usepackage{multirow}
+\usepackage{cases}
+\usepackage{enumerate}
+\usepackage{float}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{bm}
+\usepackage{psfrag}
+\usepackage{mathrsfs}
+\usepackage[hang]{subfigure}
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+
+\newtheorem{theorem}{定理}
+\newtheorem{example}{例}
+\newtheorem{lemma}{引理}
+\newtheorem{definition}{定义}
+\newtheorem{remark}{注}
+\newtheorem{comment}{注}
+\newtheorem{conjecture}{Conjecture}
+
+\setlength{\oddsidemargin}{0cm}
+\setlength{\evensidemargin}{0cm}
+\setlength{\textwidth}{150mm}
+\setlength{\textheight}{230mm}
+
+\newcommand\note[2]{{{\bf #1}\color{red} [ {\it #2} ]}}
+%\newcommand\note[2]{{ #1 }} % using this line in the formal version
+
+\newcommand\bbC{\mathbb{C}}
+\newcommand\bbR{\mathbb{R}}
+\newcommand\bbN{\mathbb{N}}
+
+\newcommand\diag{\mathrm{diag}}
+\newcommand\tr{\mathrm{tr}}
+\newcommand\dd{\mathrm{d}}
+\renewcommand\div{\mathrm{div}}
+
+\newcommand\be{\boldsymbol{e}}
+\newcommand\bx{\boldsymbol{x}}
+\newcommand\bF{\boldsymbol{F}}
+\newcommand\bG{\boldsymbol{G}}
+\newcommand\bof{\boldsymbol{f}}
+\newcommand\bu{\boldsymbol{u}}
+\newcommand\bn{\boldsymbol{n}}
+\newcommand\bv{\boldsymbol{v}}
+\newcommand\bV{\boldsymbol{V}}
+\newcommand\bU{\boldsymbol{U}}
+\newcommand\bA{\boldsymbol{A}}
+\newcommand\bB{\boldsymbol{B}}
+\newcommand\vecf{\boldsymbol{f}}
+\newcommand\hatF{\hat{F}}
+\newcommand\flux{\hat{F}_{j+1/2}}
+\newcommand\diff{\,\mathrm{d}}
+\newcommand\Norm[1]{\lvert\lvert#1\rvert\rvert}
+
+\newcommand\pd[2]{\dfrac{\partial {#1}}{\partial {#2}}}
+\newcommand\od[2]{\dfrac{\dd {#1}}{\dd {#2}}}
+\newcommand\abs[1]{\lvert #1 \rvert}
+\newcommand\norm[1]{\lvert\lvert #1 \rvert\rvert}
+\newcommand\bt{\bar\theta}
+\newcommand\bd[1]{\bold{#1}}
+\newcommand\pro[2]{\langle{#1},{#2}\rangle}
+
+\title{辐射流体方程组调研}
+\author{段俊明\thanks{北京大学数学科学学院，科学与工程计算系，邮箱： {\tt duanjm@pku.edu.cn}} }
+
+\begin{document}
+\maketitle
+%\tableofcontents %If the document is very long
+\section{辐射流体方程组}
+以下主要使用[Radiation Hydrodynamics, Castor, 2003]这本书中的记号和推导方式来
+介绍辐射流体方程组.
+记辐射强度为$I_\nu$,这里下标$\nu$表示单个频率下的辐射强度,
+记辐射传播方向为$\bn$,在三维时为
+\begin{equation}
+  \bn=\sin\theta\cos\phi\be_x+ \sin\theta\sin\phi\be_y+ \cos\theta\be_z,
+\end{equation}
+在三维情形下,$\bn$在一个单位球面上,该单位球面的面积元为$\dd\Omega$,
+\begin{equation}
+  \dd\Omega=\sin\theta\dd\theta\dd\phi,
+\end{equation}
+角度$\theta$在$[0,\pi]$区间内,角度$\phi$在$[0,2\pi]$区间内,需要注意的是
+这里$\dd\Omega$使用球坐标的形式表达,并不意味着它与实际空间有关,辐射传播方向的角度空间与
+实际空间是独立的.
+不考虑源项带来的辐射强度增加或减少时,~$I_\nu$随时间和空间的变化满足辐射输运方程
+\begin{equation}
+  \dfrac{1}{c}\pd{I_\nu}{t}+\bn\cdot\nabla I_\nu=0,
+\end{equation}
+$\nabla$是空间的梯度算子.
+现在考虑吸收和发射.经验规律表明,~$I_\nu$由于吸收导致的衰减与自身成正比,比例系数与
+$I_\nu$无关,正比于平板厚度(若厚度不是特别大),可以认为穿过的平板厚度为$c\tau$,
+$\tau$为时间元,
+\begin{equation}
+  \Delta I_\nu=-k_\nu c\tau I_\nu,
+\end{equation}
+称$k_\nu$为吸收系数,并定义光学厚度$\int k_\nu\dd l$.
+发射会使得辐射强度增加,只依赖于平板厚度,
+\begin{equation}
+  \Delta I_\nu=+j_\nu c\tau,
+\end{equation}
+于是一般的辐射输运方程可以写成
+\begin{equation}
+  \dfrac{1}{c}\pd{I_\nu}{t}+\bn\cdot\nabla I_\nu=j_\nu-k_\nu I_\nu,
+  \label{eq:RTE}
+\end{equation}
+在该形式下散射项已经包含在了吸收和发射项里面.
+
+考虑$I_\nu$对于角度$\bn$的零阶矩,一阶矩,二阶矩,
+\begin{align}
+  E_\nu&=\dfrac{1}{c}\int_{4\pi}I_\nu\dd\Omega,\\
+  F_\nu&=\int_{4\pi}\bn I_\nu\dd\Omega,\\
+  P_\nu&=\dfrac{1}{c}\int_{4\pi}\bn\bn I_\nu\dd\Omega,
+\end{align}
+分别称为辐射能量密度,辐射通量,辐射压力,
+若再将它们对于所有频率积分,得到总的辐射能量密度,辐射通量,辐射压力,
+\begin{align}
+  E_r&=\int_0^\infty E_\nu\dd\nu,\\
+  F_r&=\int_0^\infty F_\nu\dd\nu,\\
+  P_r&=\int_0^\infty P_\nu\dd\nu,
+\end{align}
+下标$r$表示与辐射相关.
+
+对方程\eqref{eq:RTE}分别乘以$1,\bn$并在球面上和所有频率上积分,
+\begin{align}
+  \pd{E_r}{t}+\nabla\cdot F_r&=
+  \int_0^\infty\int_{4\pi}(j_\nu-k_\nu I_\nu)\dd\Omega\dd\nu\triangleq S_E,\\
+  \dfrac{1}{c^2}\pd{F_r}{t}+\nabla\cdot P_r&=
+  \dfrac{1}{c}\int_0^\infty\int_{4\pi}\bn(j_\nu-k_\nu I_\nu)\dd\Omega\dd\nu\triangleq S_F,
+\end{align}
+$S_E,S_F$分别为辐射与物质交换的能量和动量.
+现在考虑辐射与欧拉方程组的耦合,辐射与物质交换的能量和动量以源项的形式作用在欧拉
+方程组上,即
+\begin{align}
+  \pd{\rho}{t}+\nabla\cdot(\rho\bu)&=0,\\
+  \pd{(\rho\bu)}{t}+\nabla\cdot(\rho\bu\bu)+\nabla p&=-S_F,\\
+  \pd{(\rho E)}{t}+\nabla\cdot[(\rho E+p)\bu]&=-S_E,
+\end{align}
+将辐射与物质的动量方程和能量方程相加,得到动量和能量的强守恒形式,
+\begin{align}
+\pd{}{t}(\rho\bu+\dfrac{F_r}{c^2})+\nabla\cdot(\rho\bu\bu+P_r)+\nabla p&=0,\\
+  \pd{}{t}(\rho E+E_r)+\nabla\cdot[(\rho E+p)\bu+F_r]&=0.
+\end{align}
+
+选取适当的物理尺度进行无量纲化,得到
+\begin{equation}
+  (\dfrac{1}{\mathscr C}\pd{}{t}+\bn\cdot\nabla)I(\nu,\bn)=S(\nu,\bn),
+\end{equation}
+其中,~$\mathscr C=\dfrac{c}{a_\infty}$,~$c$是光速,~$a_\infty$是物质声速,
+\begin{equation}
+  S(\nu,\bn)={\mathscr L}\dfrac{\nu_0}{\nu}[(\dfrac{\nu}{\nu_0})^3
+  \sigma_a(\nu_0)B(\nu_0,T)-\sigma_t(\nu_0)I(\nu,\bn)]+\eta^S(\nu,\bn).
+\end{equation}
+动量和能量方程变为
+\begin{align}
+  \pd{}{t}(\rho\bu+\dfrac{\mathscr P}{\mathscr
+  C}F_r)+\nabla\cdot(\rho\bu\bu+{\mathscr P}P_r)+\nabla p&=0,\\
+  \pd{}{t}(\rho E+{\mathscr P}E_r)+\nabla\cdot[(\rho E+p)\bu+{\mathscr {PC}}F_r]&=0.
+\end{align}
+
+\section{low energy density regime}
+[On Consistent Time-Integration Methods for Radiation Hydrodynamics in
+the Equilibrium Diffusion Limit: Low-Energy-Density Regime, J. W. Bates et al, 2001, JCP]
+中给出了灰体近似和扩散极限下,且辐射场和物质保持LTE,非相对论情形下的辐射流体方程组,
+\begin{align}
+  \pd{\rho}{t}+\nabla\cdot(\rho\bu)&=0,\\
+  \pd{}{t}(\rho\bu)+\nabla\cdot(\rho\bu\bu)+\nabla (p+P_\nu)&=0,\\
+  \pd{}{t}(E+E_\nu)+\nabla\cdot[(E+E_\nu+p+p_\nu)\bu]&=\nabla\cdot(\kappa\nabla T),
+\end{align}
+其中,~$p_\nu=E_\nu/3=\dfrac43\sigma T^4/c$,~$p=R\rho T=(\gamma-1)\rho e$,
+在low energy density regime中,~$p_\nu,E_\nu$相对于$p,E$可以忽略不计.
+考虑一维球对称情形,该方程组化为
+\begin{align}
+  \pd{\rho}{t}+\dfrac{1}{r^2}\pd{}{r}(r^2\rho u)&=0,\\
+  \pd{}{t}(\rho u)+\dfrac{1}{r^2}\pd{}{r}(r^2\rho u^2)+\pd{p}{r}&=0,\\
+  \pd{E}{t}+\dfrac{1}{r^2}\pd{}{r}[r^2(E+p)u]&=
+  \dfrac{1}{r^2}\pd{}{r}(r^2\kappa \pd{T}{r}).
+\end{align}
+定义比热容$C_v=\dfrac{R}{\gamma-1}$,则$E=C_v\rho T+\dfrac12\rho u^2$,
+这里假定$\kappa=\kappa_0\rho^a T^b$,在模型中$b=2.5,6.5$,因此$\kappa$可能很大,
+这一项需要隐式处理.
+
+Kadioglu, Knoll在2001年JCP的文章中使用一种IMEX方法求解该方程组,即显式Godunov格式
+求解流体方程组,隐式格式求解热传导项,隐式部分使用Newton-Krylov迭代法求解非线性方
+程组,时间方向使用predictor-corrector两层格式,显式求解部分与隐式求解部分分离,不能
+达到二阶精度.在2010年JCP的文章中,他们将显式求解部分放到了隐式迭代求解中,即每一次
+非线性方程组的迭代都要显式求解一次流体方程组,该格式的计算量较大,但达到了二阶精度
+.之后在2010年JCP的文章中,他们将该方法推广到了high energy density的方程组中.
+Zhang Xiangxiong在2017年JCP的文章中,提出了一种显式的高精度保正DG方法求解NS方程组
+,时间步长为$O(Re h^2)$,该方法适用于高雷诺数的情形,由于这里热传导系数较大,该方法
+并不适用.
+
+Newton迭代法需要一阶导数信息,在高维时需要生成Jacobi矩阵并求逆,这部分计算量过大,
+因此这里考虑使用Krylov子空间方法来处理一步Newton迭代,~$J(T^k)\delta T^k=-F(T^k)$,
+例如GMRES方法只需要矩阵向量乘积,这一部分是容易得到的.
+
+下面给出Kadioglu和Knoll在2010年JCP的文章中提出的算法.
+将流体方程组写为
+\begin{equation}
+  \pd{\bU}{t}+\pd{(A\bF)}{V}+\pd{\bG}{r}=0,
+\end{equation}
+其中$\bU=(\rho,\rho u,E)$,~$\bF(\bU)=(\rho u,\rho
+u^2,u(E+p))$,~$\bG(\bU)=(0,p,0)$,~$V=\frac43\pi r^3$,~$A=4\pi r^2$.
+使用二阶RK求解,
+\begin{align}
+  \bU^1&=\bU^n+\Delta tL(\bU^n),\\
+  \bU^{n+1}&=\frac12\bU^n+\frac12\bU^1+\frac12\Delta tL(\bU^{1,*}),
+\end{align}
+使用LLF通量,
+\begin{align}
+  \bU^1_i&=\bU^n_i-\dfrac{\Delta t}{\Delta V_i}(A_{i+\frac12}\bF^n_{i+\frac12}
+  -A_{i-\frac12}\bF^n_{i-\frac12})-\dfrac{\Delta t}{\Delta
+  r}(\bG^n_{i+\frac12}-\bG^n_{i+\frac12}),\\
+  \bF_{i+\frac12}&=\dfrac{\bF(\bU^R_{i+\frac12})+\bF(\bU^L_{i+\frac12})}{2}
+  -\alpha_{i+\frac12}\dfrac{\bU^R_{i+\frac12}-\bU^L_{i+\frac12}}{2},
+\end{align}
+$\bU^R_{i+\frac12}, \bU^L_{i+\frac12}$使用线性重构和minmod限制器得到.
+与常见的格式唯一不同之处是,
+\begin{equation}
+  E^{1,*}=C_v\rho^1 T^k+\frac12\rho^1(u^1)^2,
+\end{equation}
+使用了隐式第k次迭代得到的温度$T^k$.
+
+
+整体算法如下,
+\begin{itemize}
+  \item 在$t^n$时,使用Newton迭代求解隐式求解热传导项,假设当前是第k次迭代,~$T^k$已知.
+  \item 使用二阶RK和LLF格式求解一次流体方程组,得到$(\rho^{n+1},(\rho u)^{n+1},E^*)$,
+  \item 形成非线性方程组的残量,
+    \begin{align}
+      &Res=\dfrac{C_v\rho^{n+1}T^k+\rho^{n+1}(u^{n+1})^2/2-E^*}{\Delta
+      t}-\dfrac{RHS(\rho^{n+1},T^k)+RHS(\rho^{n},T^n)}{2},\\
+      &RHS(\rho_i,T_i)=\dfrac{A_{i+\frac12}\kappa_{i+\frac12}(T_{i+1}-T_i)/\Delta r}{\Delta V_i}-
+      -\dfrac{A_{i-\frac12}\kappa_{i-\frac12}(T_{i}-T_{i-1})/\Delta r}{\Delta V_i},
+    \end{align}
+    计算$\delta^k T,k=k+1$,直到$\norm{\bF(T^k)}<\varepsilon$.
+\end{itemize}
+
+现在考虑隐式求解非线性热传导项的保正,若$\kappa$为一个正的常系数,形成的线性方程组
+的解自然是正的,关键是非线性$\kappa$时如何处理.
+
+\end{document}
+
