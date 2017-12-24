@@ -9,8 +9,8 @@ T = data.T;
 m = 2;
 plot(rc(1:m:end), T(1:m:end), 'ro', rc1, T_exact, '-');
 legend('numerical','analytical');
-axis([0,1,0,1.4]);
-%axis([0,1,0,1]);
+%axis([0,1,0,1.4]);
+axis([0,1,0,1]);
 xlabel('r');
 ylabel('Temperature');
 

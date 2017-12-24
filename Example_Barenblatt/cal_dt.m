@@ -1,8 +1,8 @@
-function dt = cal_dt(U, T, dt, t, deltaT);
+function dt = cal_dt(flag, U, T, dt, t, deltaT);
 global dr CFL GAMMA C_v kappa0 b;
 %give speed at the cell boundaries
 
-if t < 1e-18
+if flag == 0
   dt = dr^2/U(1,1)/C_v/(kappa0*T(1)^b);
 else
   vf = (norm(deltaT,1)/dt)./(norm(T(2:end)-T(1:end-1),1)/dr);
