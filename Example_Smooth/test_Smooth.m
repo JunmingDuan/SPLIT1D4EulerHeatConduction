@@ -1,5 +1,5 @@
 clear all;
-addpath('../IM','../EX');
+addpath('../src/EX','../src/IM');
 format long;
 global dt dr A V dv CFL GAMMA C_v BMl BMr kappa0 a b theta NL_TOL TAU maxite;
 

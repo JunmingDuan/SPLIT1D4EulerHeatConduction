@@ -1,10 +1,10 @@
 clear all;
-addpath('../IM','../EX');
+addpath('../src/EX','../src/IM');
 format long;
-global dt dr A V dv CFL GAMMA C_v BMl BMr kappa0 a b theta NL_TOL TAU maxite;
+global dt dr A V dv CFL GAMMA C_v BMl BMr kappa0 a b theta NL_TOL TAU maxite gmres_ite;
 
 %computational time
-t_end = 1.0;
+t_end = 0.3;
 %mesh
 Nr = 2e2;
 R = 1;
@@ -25,15 +25,13 @@ BMl = -1; BMr = 1;
 %coefficient of heat conduction
 kappa0 = 1;
 %exponent of heat conduction term
-a = 0; b = 6.5;
+a = 0; b = 2.5;
 %coefficient of C-N scheme: theta*t^{n+1} + (1-theta)*t^n
-theta = 1;
-%tol for Newton iteration
-NL_TOL = 1e-3;
-%linear tol for GMRES
-TAU = 1e-6;
-%number of Newton iteration
-maxite = 3;
+theta = 0;
+%tol and iterations for Newton iteration
+NL_TOL = 1e-7; maxite = 3;
+%linear tol and iterations for GMRES
+TAU = 1e-6; gmres_ite = 100;
 
 %initialization
 [U T] = initialization(rc);
@@ -43,7 +41,6 @@ dt = 0;
 t = 0;
 deltaT = zeros(size(T));
 while t < t_end;
-%for j = 1:1
   dt = cal_dt(U, T, dt, t, deltaT);
   if t + dt > t_end
     dt = t_end - t;
@@ -53,7 +50,7 @@ while t < t_end;
   %T = U(3,:)./U(1,:)/C_v;
 
   %IM
-  T1 = IM(U, T, dt, maxite);
+  T1 = IM(U, T, dt, maxite, theta);
   deltaT = T1 - T;
   T = T1;
   %relation between hydrodynamics and heat conduction
@@ -64,9 +61,7 @@ while t < t_end;
 end
 toc;
 
-hold on;
-plot(rc, T, 'bo');
-save Barenblatt2_the0 rc U T
+save(['Barenblatt_the',num2str(theta),'_t',num2str(t_end),'_k',num2str(b),'.mat'], 'rc', 'U', 'T');
 
 %Barenblatt exact
 E0 = 10;
@@ -76,13 +71,5 @@ XI0 = ((3*b+2)/(2^(b-1)*b*pi^b))^(1/(3*b+2))*(gamma(5/2+1/b)/gamma(1+1/b)/gamma(
 rf = XI0*(KAI0*Q^b*t_end)^(1/(3*b+2));
 T_c = Q*XI0^3/rf^3*(b*XI0^2/2/(3*b+2))^(1/b);
 T_exact = T_c*(1-min(rc,rf).^2/rf^2).^(1/b);
-plot(rc, T_exact, '-k');
-legend('numerical','analytical');
-axis([0,1,0,1.0]);
-xlabel('r');
-ylabel('Temperature');
-fprintf('err1: %.6e\n', norm(T-T_exact, 1)/length(T));
-fprintf('err2: %.6e\n', norm(T-T_exact, 2)/sqrt(length(T)));
-fprintf('errinf %.6e\n', norm(T-T_exact, inf));
-save Barenblatt_exact_E10_t1_k6_5 rc T_exact
+save(['Barenblatt_exact_E',num2str(E0),'_t',num2str(t_end),'_k',num2str(b),'.mat'], 'rc', 'T_exact');
 
