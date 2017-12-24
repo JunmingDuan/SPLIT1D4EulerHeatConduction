@@ -1,0 +1,10 @@
+*.mat
+*.aux
+*.log
+*.bib
+*.eps
+*.pdf
+*.o
+*.d
+main
+
