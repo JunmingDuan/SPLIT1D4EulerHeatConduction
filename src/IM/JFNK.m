@@ -7,6 +7,7 @@ global kappa0 C_v dv dr A TAU NL_TOL gmres_ite
 %[M1, M2] = ilu(MAT);
 %MAT = LI_mat(U, T, dt);
 %Newton iteration
+res0 = norm(F(U, T, dt, T, 0), 2);
 for k = 1:maxite
   rhs = -F(U, T, dt, T, 0)';
   MAT = LI_mat(U, T, dt);
@@ -16,7 +17,7 @@ for k = 1:maxite
   T = T + dT';
   relres;
   nl_res = norm(F(U, T, dt, T, 0), 2);
-  if nl_res < NL_TOL
+  if nl_res < NL_TOL*res0
     break;
   end
 end
